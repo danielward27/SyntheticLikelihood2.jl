@@ -9,10 +9,12 @@ using StatsBase
 using Parameters
 import Base.@kwdef
 
-# prior.jl
-export Prior, sample_θ
+import Random: default_rng
 
 include("prior.jl")
 include("example_task.jl")
+
+# prior
+export Prior, sample_prior
 
 end

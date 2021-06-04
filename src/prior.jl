@@ -1,5 +1,6 @@
 abstract type AbstractPrior end
 
+
 """
 Struct to hold prior distributions. `v` is a vector of distributions from
 Distributions.jl. Univariate and/or multivariate distributions can be used.
@@ -19,6 +20,7 @@ struct Prior <: AbstractPrior
     end
 end
 
+
 """
 'Cut' vector at specified indexes, to form a vector of vectors. Note the cut
 occurs after the index, so [1] would cut between index 1 and 2 in the vector.
@@ -32,11 +34,11 @@ end
 
 
 "Evaluate the density of the prior at θ."
-function logpdf(prior::AbstractPrior, θ::Vector{Float64})
+function prior_logpdf(prior::AbstractPrior, θ::Vector{Float64})
     split_θ = cut_at(θ, prior.splits)
     l = 0
     for (d, θ) in zip(prior.v, split_θ)
-        d isa UnivariateDistribution ? lᵢ = loglikelihood(d, θ[1]) : lᵢ = loglikelihood(d, θ)
+        lᵢ = d isa UnivariateDistribution ? loglikelihood(d, θ[1]) : loglikelihood(d, θ)
         l += lᵢ
     end
     l
@@ -69,42 +71,41 @@ end
 
 
 """
-Covariance matrix from vector of priors.
+Covariance matrix of the prior.
 """
-function cov(prior::AbstractPrior)
-  blocks = [cov(d) for d in prior.v]
-  Σ = cat(blocks..., dims=(1,2))  # Block diagonal
-  Symmetric(Matrix(Σ))
+function prior_cov(prior::AbstractPrior)
+    blocks = [d isa UnivariateDistribution ? var(d) : Distributions.cov(d) for d in prior.v]
+    Σ = cat(blocks..., dims=(1,2))  # Block diagonal
+    Symmetric(Matrix(Σ))
 end
 
 
 """
-Check if a proposed parameter vector falls within the prior support.
+Check if a parameter vector falls within the prior support.
 """
-function insupport(prior::AbstractPrior, θ::AbstractVector{Float64})
+function in_prior_support(prior::AbstractPrior, θ::AbstractVector{Float64})
     split_θ = cut_at(θ, prior.splits)
     all([Distributions.insupport(d, θᵢ)[1] for (d, θᵢ) in zip(prior.v, split_θ)])
 end
 
 
-# TODO Type piracy, might be best to avoid below.
-"Covariance matrix (1 by 1) for univariate distribution."
-function cov(d::UnivariateDistribution)
-    Diagonal([var(d)])
+"""
+Sample parameters from the prior. Note that if n is provided, a matrix is
+returned with n columns.
+"""
+function sample_prior(rng::AbstractRNG, prior::AbstractPrior)
+    θ = [rand(rng, d) for d in prior.v]
+    vcat(θ...)
 end
 
+sample_prior(prior::AbstractPrior) = sample_prior(default_rng(), prior)
 
-"Sample a parameter vector from the prior."
-function sample_θ(prior::AbstractPrior)
-    samp = [rand(d) for d in prior.v]
-    vcat(samp...)
-end
-
-"Sample a matrix of parameter vectors from the prior"
-function sample_θ(prior::AbstractPrior, n::Int64)
-    samples = Matrix{Float64}(undef, n, prior.length)
+function sample_prior(rng::AbstractRNG, prior::AbstractPrior, n::Int64)
+    θ = Matrix{Float64}(undef, prior.length, n)
     for i in 1:n
-        samples[i, :] = sample_θ(prior)
+        θ[:, i] = sample_prior(rng, prior)
     end
-    samples
+    θ
 end
+
+sample_prior(prior::AbstractPrior, n::Int64) = sample_prior(default_rng(), prior, n)
