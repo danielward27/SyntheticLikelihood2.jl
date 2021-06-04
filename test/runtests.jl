@@ -1,6 +1,5 @@
-using SyntheticLikelihood2
-using Test
+using SyntheticLikelihood2, Test, SafeTestsets
 
-@testset "SyntheticLikelihood2.jl" begin
-    # Write your tests here.
+@time begin
+    @time @safetestset "prior" begin include("prior_test.jl") end
 end
