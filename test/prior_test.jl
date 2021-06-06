@@ -60,9 +60,9 @@ end
 
 @testset "Sampling" begin
     prior = Prior([MvNormal([1.,2.]), Normal()])
-    @test sample_prior(prior) isa Vector{Float64}
-    @test sample_prior(prior, 10) isa Matrix{Float64}
-    @test size(sample_prior(prior, 10)) == (3,10)
+    @test simulate(prior) isa Vector{Float64}
+    @test simulate(prior, 10) isa Matrix{Float64}
+    @test size(simulate(prior, 10)) == (10,3)
 end
 
 

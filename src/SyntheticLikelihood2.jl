@@ -1,5 +1,6 @@
 module SyntheticLikelihood2
 
+using Base: ident_cmp
 using Distributions
 using Random
 using ForwardDiff
@@ -12,9 +13,12 @@ import Base.@kwdef
 import Random: default_rng
 
 include("prior.jl")
-include("example_task.jl")
+include("tasks.jl")
 
 # prior
-export Prior, sample_prior
+export Prior, simulate
+
+# Tasks
+export @loopify
 
 end

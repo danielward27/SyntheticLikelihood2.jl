@@ -93,19 +93,19 @@ end
 Sample parameters from the prior. Note that if n is provided, a matrix is
 returned with n columns.
 """
-function sample_prior(rng::AbstractRNG, prior::AbstractPrior)
+function simulate(rng::AbstractRNG, prior::AbstractPrior)
     θ = [rand(rng, d) for d in prior.v]
     vcat(θ...)
 end
 
-sample_prior(prior::AbstractPrior) = sample_prior(default_rng(), prior)
+simulate(prior::AbstractPrior) = simulate(default_rng(), prior)
 
-function sample_prior(rng::AbstractRNG, prior::AbstractPrior, n::Int64)
-    θ = Matrix{Float64}(undef, prior.length, n)
+function simulate(rng::AbstractRNG, prior::AbstractPrior, n::Int64)
+    θ = Matrix{Float64}(undef, n, prior.length)
     for i in 1:n
-        θ[:, i] = sample_prior(rng, prior)
+        θ[i, :] = simulate(rng, prior)
     end
     θ
 end
 
-sample_prior(prior::AbstractPrior, n::Int64) = sample_prior(default_rng(), prior, n)
+simulate(prior::AbstractPrior, n::Int64) = simulate(default_rng(), prior, n)
