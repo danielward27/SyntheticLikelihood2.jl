@@ -8,15 +8,17 @@ using LinearAlgebra
 using Statistics
 using StatsBase
 using Parameters
+using KernelDensity
 import Base.@kwdef
 
 import Random: default_rng
 
 include("prior.jl")
+include("density_estimators.jl")
 include("tasks.jl")
 
 # prior
-export Prior, simulate
+export Prior, propose
 
 # Tasks
 export @loopify

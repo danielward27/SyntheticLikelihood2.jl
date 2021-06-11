@@ -4,8 +4,8 @@ import SyntheticLikelihood2: gaussian_simulator
 prior = Prior(fill(Uniform(-1,1), 3))
 rng = MersenneTwister(1)
 
-θ_vec = simulate(rng, prior)
-θ_mat = simulate(rng, prior, 5)
+θ_vec = propose(rng, prior)
+θ_mat = propose(rng, prior, 5)
 
 @loopify 3 gaussian_simulator
 

@@ -1,4 +1,6 @@
-abstract type AbstractPrior end
+# All AbstractProposal should have methods propose(::AbstractRNG,
+# ::AbstractProposal), and propose(::AbstractProposal) (using default_rng())
+abstract type AbstractProposal end
 
 
 """
@@ -6,7 +8,7 @@ Struct to hold prior distributions. `v` is a vector of distributions from
 Distributions.jl. Univariate and/or multivariate distributions can be used.
 Each element in the vector is assumed to be independent.
 """
-struct Prior <: AbstractPrior
+struct Prior <: AbstractProposal
     "A vector of distributions"
     v::Vector{<: Distribution}
     splits::Vector{Int}
@@ -34,7 +36,7 @@ end
 
 
 "Evaluate the density of the prior at θ."
-function prior_logpdf(prior::AbstractPrior, θ::Vector{Float64})
+function prior_logpdf(prior::Prior, θ::Vector{Float64})
     split_θ = cut_at(θ, prior.splits)
     l = 0
     for (d, θ) in zip(prior.v, split_θ)
@@ -46,7 +48,7 @@ end
 
 
 "Automatic differentiation to get prior gradient."
-function log_prior_gradient(prior::AbstractPrior, θ::Vector{Float64})
+function log_prior_gradient(prior::Prior, θ::Vector{Float64})
     split_θ = cut_at(θ, prior.splits)
     ∇s = Vector{Vector{Float64}}(undef, length(split_θ))
     for (i, (d, θ)) in enumerate(zip(prior.v, split_θ))
@@ -58,7 +60,7 @@ end
 
 
 "Automatic differentiation to get prior Hessian."
-function log_prior_hessian(prior::AbstractPrior, θ::Vector{Float64})
+function log_prior_hessian(prior::Prior, θ::Vector{Float64})
     split_θ = cut_at(θ, prior.splits)
     Hs = Vector{Matrix{Float64}}(undef, length(split_θ))
     for (i, (d, θ)) in enumerate(zip(prior.v, split_θ))
@@ -73,7 +75,7 @@ end
 """
 Covariance matrix of the prior.
 """
-function prior_cov(prior::AbstractPrior)
+function prior_cov(prior::Prior)
     blocks = [d isa UnivariateDistribution ? var(d) : Distributions.cov(d) for d in prior.v]
     Σ = cat(blocks..., dims=(1,2))  # Block diagonal
     Symmetric(Matrix(Σ))
@@ -83,7 +85,7 @@ end
 """
 Check if a parameter vector falls within the prior support.
 """
-function in_prior_support(prior::AbstractPrior, θ::AbstractVector{Float64})
+function in_prior_support(prior::Prior, θ::AbstractVector{Float64})
     split_θ = cut_at(θ, prior.splits)
     all([Distributions.insupport(d, θᵢ)[1] for (d, θᵢ) in zip(prior.v, split_θ)])
 end
@@ -93,19 +95,19 @@ end
 Sample parameters from the prior. Note that if n is provided, a matrix is
 returned with n columns.
 """
-function simulate(rng::AbstractRNG, prior::AbstractPrior)
+function propose(rng::AbstractRNG, prior::Prior)
     θ = [rand(rng, d) for d in prior.v]
     vcat(θ...)
 end
 
-simulate(prior::AbstractPrior) = simulate(default_rng(), prior)
+propose(prior::Prior) = propose(default_rng(), prior)
 
-function simulate(rng::AbstractRNG, prior::AbstractPrior, n::Int64)
+function propose(rng::AbstractRNG, prior::Prior, n::Int64)
     θ = Matrix{Float64}(undef, n, prior.length)
     for i in 1:n
-        θ[i, :] = simulate(rng, prior)
+        θ[i, :] = propose(rng, prior)
     end
     θ
 end
 
-simulate(prior::AbstractPrior, n::Int64) = simulate(default_rng(), prior, n)
+propose(prior::Prior, n::Int64) = propose(default_rng(), prior, n)
