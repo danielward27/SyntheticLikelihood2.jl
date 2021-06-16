@@ -1,4 +1,5 @@
-# Each density estimator should have a fit method, taking AbstractDensityData
+# Each density estimator should have a method fit_density(::AbstractDensityData)
+# We should use log density problems...
 
 abstract type AbstractDensityEstimator end
 abstract type AbstractDensityData end
@@ -9,21 +10,15 @@ abstract type AbstractDensityData end
 end
 
 
-"""
-Naive conditional kernel density estimator. Uses kernel density estimates for
-p(x, θ) and p(θ), and estimates the likelihood with p(x, θ)/p(θ).
-"""
-struct DoubleKernel <: AbstractDensityEstimator
-
+@kwdef struct LocalRegressionPosterior <: AbstractDensityEstimator
+    prior::Prior
+    P::Union{Diagonal, Symmetric}
 end
 
 
 
-
-
-
 function fit_density(
-    density_estimator::AbstractDensityEstimator,
+    density_estimator::LocalRegression,
     inference_state::AbstractDensityData)
     error("unimplemented")
 end

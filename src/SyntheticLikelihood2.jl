@@ -9,6 +9,7 @@ using Statistics
 using StatsBase
 using Parameters
 using KernelDensity
+using LogDensityProblems
 import Base.@kwdef
 
 import Random: default_rng
